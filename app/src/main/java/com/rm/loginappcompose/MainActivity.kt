@@ -15,27 +15,24 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.rm.loginappcompose.googlesignin.GoogleSignInState
-import com.rm.loginappcompose.googlesignin.SignInWithGoogle
+import androidx.navigation.compose.rememberNavController
 import com.rm.loginappcompose.data.AppConstants
+import com.rm.loginappcompose.googlesignin.SignInWithGoogle
 import com.rm.loginappcompose.googlesignin.rememberGoogleSignInState
+import com.rm.loginappcompose.ui.navigation.AppNavGraph
+import com.rm.loginappcompose.ui.navigation.RouteName
 import com.rm.loginappcompose.ui.theme.LoginAppComposeTheme
-import io.realm.kotlin.Realm
-import io.realm.kotlin.mongodb.App
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             LoginAppComposeTheme {
-                // A surface container using the 'background' color from the theme
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    SignInWithGoogleTest()
-                }
+                val navController = rememberNavController()
+                AppNavGraph(
+                    startDestination = RouteName.AUTHENTICATION,
+                    navController = navController
+                )
             }
         }
     }
@@ -70,6 +67,5 @@ fun SignInWithGoogleTest() {
 fun GoogleSignInTest() {
     LoginAppComposeTheme {
         SignInWithGoogleTest()
-
     }
 }
