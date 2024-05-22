@@ -61,7 +61,6 @@ fun SignInButton(
         border = BorderStroke(width = borderStrokeWidth, color = borderColor),
         color = backgroundColor
     ) {
-
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -87,13 +86,10 @@ fun SignInButton(
             )
         }
     }
-
 }
 
 @Preview
 @Composable
 fun PreviewSignInButton() {
-    SignInButton(
-        loadingState = false
-    ) {}
+    SignInButton(loadingState = false) {}
 }

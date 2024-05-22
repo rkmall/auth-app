@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -32,7 +31,6 @@ fun AuthenticationContent(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-
         Column(
             modifier = Modifier.weight(4f),
             verticalArrangement = Arrangement.Center,
@@ -40,8 +38,7 @@ fun AuthenticationContent(
         ) {
             Image(
                 modifier = Modifier.size(120.dp),
-                painter = painterResource(
-                id = R.drawable.google_logo),
+                painter = painterResource(id = R.drawable.google_logo),
                 contentDescription = "Google logo"
             )
             Spacer(modifier = Modifier.height(20.dp))
@@ -52,18 +49,18 @@ fun AuthenticationContent(
             Text(
                 text = "Please sign in to continue",
                 fontSize = MaterialTheme.typography.bodyMedium.fontSize,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.37f)
             )
-
         }
 
         Column(
             modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.Bottom
         ) {
-            SignInButton(loadingState = loadingState) {
-                onButtonClicked()
-            }
+            SignInButton(
+                loadingState = loadingState,
+                onClick = onButtonClicked
+            )
         }
     }
 }

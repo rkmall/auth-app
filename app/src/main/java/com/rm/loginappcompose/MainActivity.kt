@@ -8,8 +8,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -20,7 +18,7 @@ import com.rm.loginappcompose.data.AppConstants
 import com.rm.loginappcompose.googlesignin.SignInWithGoogle
 import com.rm.loginappcompose.googlesignin.rememberGoogleSignInState
 import com.rm.loginappcompose.ui.navigation.AppNavGraph
-import com.rm.loginappcompose.ui.navigation.RouteName
+import com.rm.loginappcompose.ui.navigation.Route
 import com.rm.loginappcompose.ui.theme.LoginAppComposeTheme
 
 class MainActivity : ComponentActivity() {
@@ -30,7 +28,7 @@ class MainActivity : ComponentActivity() {
             LoginAppComposeTheme {
                 val navController = rememberNavController()
                 AppNavGraph(
-                    startDestination = RouteName.AUTHENTICATION,
+                    startDestination = Route.Authentication.route,
                     navController = navController
                 )
             }
@@ -38,16 +36,38 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 @Composable
 fun SignInWithGoogleTest() {
     val signInState = rememberGoogleSignInState()
     SignInWithGoogle(
-        state = signInState  ,
+        state = signInState,
         clientId = AppConstants.WEB_CLIENT_ID ,
         onTokenIdReceived = {
             Log.d("Token", "Token: $it")
         },
-        onDialogDismissed = {}
+        onDialogDismissed = {
+            Log.d("Token", "Message: $it")
+        }
     )
 
     Column(

@@ -33,7 +33,7 @@ private const val TAG = "googleSignIn"
 fun SignInWithGoogle(
     state: GoogleSignInState,
     clientId: String,
-    rememberAccount: Boolean = true,
+    rememberAccount: Boolean = false,
     onTokenIdReceived: (String) -> Unit,
     onDialogDismissed: (String) -> Unit
 ) {
@@ -45,7 +45,7 @@ fun SignInWithGoogle(
         GetGoogleIdOption.Builder()
             .setFilterByAuthorizedAccounts(rememberAccount)
             .setServerClientId(clientId)
-            .setNonce(createNonce())
+            .setNonce(getNonce())
             .build()
     }
 
@@ -55,8 +55,8 @@ fun SignInWithGoogle(
             .build()
     }
 
-    LaunchedEffect(key1 = state.opened) {
-        if (state.opened) {
+    LaunchedEffect(key1 = state.isOpen) {
+        if (state.isOpen) {
             scope.launch {
                 try {
                     val response = credentialManager.getCredential(
@@ -66,12 +66,12 @@ fun SignInWithGoogle(
 
                     handleSignIn(
                         credentialResponse = response,
-                        onTokenIdReceived = {
-                            onTokenIdReceived(it)
+                        onTokenIdReceived = { token ->
+                            onTokenIdReceived(token)
                             state.close()
                         },
-                        onDialogDismissed =  {
-                            onDialogDismissed(it)
+                        onDialogDismissed =  { dismissMessage ->
+                            onDialogDismissed(dismissMessage)
                             state.close()
                         }
                     )
@@ -126,6 +126,7 @@ private fun handleNoCredentialException(
     onDialogDismissed: (String) -> Unit
 ) {
     try {
+        // Navigate to the activity that allows to add new Google account
         val addAccountIntent = Intent(Settings.ACTION_ADD_ACCOUNT).apply {
             putExtra(Settings.EXTRA_ACCOUNT_TYPES, arrayOf("com.google"))
         }
@@ -138,7 +139,7 @@ private fun handleNoCredentialException(
     }
 }
 
-private fun createNonce(): String {
+private fun getNonce(): String {
     val rawNonce = UUID.randomUUID().toString()
     val bytes = rawNonce.toByteArray()
     val md = MessageDigest.getInstance("SHA-256")
@@ -156,19 +157,19 @@ fun rememberGoogleSignInState(): GoogleSignInState {
 }
 
 private val GoogleSignInStateSaver: Saver<GoogleSignInState, Boolean> = Saver(
-    save = { state -> state.opened },
-    restore = { opened -> GoogleSignInState(opened) }
+    save = { state -> state.isOpen },
+    restore = { isOpen -> GoogleSignInState(isOpen) }
 )
 
 class GoogleSignInState(open: Boolean = false ) {
-    var opened by mutableStateOf(open)
+    var isOpen by mutableStateOf(open)
         private set
 
     fun open() {
-        opened = true
+        isOpen = true
     }
 
     internal fun close() {
-        opened = false
+        isOpen = false
     }
 }
