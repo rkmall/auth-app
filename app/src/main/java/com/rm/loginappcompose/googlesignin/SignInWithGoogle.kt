@@ -23,6 +23,7 @@ import androidx.credentials.exceptions.NoCredentialException
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
+import com.rm.loginappcompose.ui.screen.authentication.AuthEvent
 import kotlinx.coroutines.launch
 import java.security.MessageDigest
 import java.util.UUID
@@ -35,7 +36,8 @@ fun SignInWithGoogle(
     clientId: String,
     rememberAccount: Boolean = false,
     onTokenIdReceived: (String) -> Unit,
-    onDialogDismissed: (String) -> Unit
+    onDialogDismissed: (String) -> Unit,
+    onExceptionReceived: () -> Unit
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -70,25 +72,34 @@ fun SignInWithGoogle(
                             onTokenIdReceived(token)
                             state.close()
                         },
-                        onDialogDismissed =  { dismissMessage ->
+                        onSignInFailure =  { dismissMessage ->
                             onDialogDismissed(dismissMessage)
                             state.close()
                         }
                     )
                 } catch (e: androidx.credentials.exceptions.GetCredentialException) {
                     when (e) {
-                        is NoCredentialException -> handleNoCredentialException(context, state, onDialogDismissed)
+                        is NoCredentialException -> {
+                            handleNoCredentialException(
+                                context,
+                                state,
+                                onExceptionReceived,
+                                onDialogDismissed
+                            )
+                        }
 
                         is GetCredentialCancellationException -> {
                             Log.e(TAG, "${e.message}")
                             onDialogDismissed("Dialog closed!")
                             state.close()
+                            onExceptionReceived()
                         }
 
                         else -> {
                             Log.e(TAG, "${e.message}")
                             onDialogDismissed("Unknown error occurred!")
                             state.close()
+                            onExceptionReceived()
                         }
                     }
                 }
@@ -100,7 +111,7 @@ fun SignInWithGoogle(
 private fun handleSignIn(
     credentialResponse: GetCredentialResponse,
     onTokenIdReceived: (String) -> Unit,
-    onDialogDismissed: (String) -> Unit
+    onSignInFailure: (String) -> Unit
 ) {
     when (val credential = credentialResponse.credential) {
         is CustomCredential -> {
@@ -109,21 +120,22 @@ private fun handleSignIn(
                     val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
                     onTokenIdReceived(googleIdTokenCredential.idToken)
                 } catch (e: GoogleIdTokenParsingException) {
-                    onDialogDismissed("Invalid Google tokenId response: ${e.message}" )
+                    onSignInFailure("Invalid Google tokenId response: ${e.message}" )
                 }
             } else {
-                onDialogDismissed("Unexpected type of Credential")
+                onSignInFailure("Unexpected type of Credential")
             }
         }
 
-        else -> onDialogDismissed("Unexpected type of Credential")
+        else -> onSignInFailure("Unexpected type of Credential")
     }
 }
 
 private fun handleNoCredentialException(
     context: Context,
     state: GoogleSignInState,
-    onDialogDismissed: (String) -> Unit
+    onExceptionReceived: () -> Unit,
+    onSignInFailure: (String) -> Unit
 ) {
     try {
         // Navigate to the activity that allows to add new Google account
@@ -131,10 +143,11 @@ private fun handleNoCredentialException(
             putExtra(Settings.EXTRA_ACCOUNT_TYPES, arrayOf("com.google"))
         }
         state.close()
+        onExceptionReceived()
         context.startActivity(addAccountIntent)
     } catch (e: Exception) {
         Log.e(TAG, "${e.message}")
-        onDialogDismissed("Error while opening Settings for Google Accounts")
+        onSignInFailure("Error while opening Settings for Google Accounts")
         state.close()
     }
 }

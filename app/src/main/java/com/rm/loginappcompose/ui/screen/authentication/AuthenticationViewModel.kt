@@ -1,7 +1,5 @@
 package com.rm.loginappcompose.ui.screen.authentication
 
-import android.util.Log
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.rm.loginappcompose.data.AppConstants.MONGO_APP_ID
@@ -15,14 +13,12 @@ import io.realm.kotlin.mongodb.Credentials
 import io.realm.kotlin.mongodb.User
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -32,7 +28,7 @@ class AuthenticationViewModel @Inject constructor(
     private val userInfoDataStoreRepository: UserInfoDataStoreRepository
 ) : ViewModel() {
 
-    private val _authState : MutableStateFlow<AuthState> = MutableStateFlow(AuthState())
+    private val _authState : MutableStateFlow<AuthState> = MutableStateFlow(setInitialState())
     val authState: StateFlow<AuthState> = _authState.asStateFlow()
 
     private val _authEvent: MutableSharedFlow<AuthEvent> = MutableSharedFlow()
@@ -42,6 +38,19 @@ class AuthenticationViewModel @Inject constructor(
 
     init {
         subscribeToEvents()
+    }
+
+    private fun setInitialState(): AuthState {
+        val user = App.create(MONGO_APP_ID).currentUser
+        return if (user != null && user.loggedIn) {
+            AuthState(
+                googleButtonState = GoogleButtonState(isAuthenticated = true, signInState = GoogleSignInState(false)),
+                isLoading = false,
+                isError = false
+            )
+        } else {
+            AuthState()
+        }
     }
 
     private fun subscribeToEvents() {
@@ -63,7 +72,7 @@ class AuthenticationViewModel @Inject constructor(
         }
     }
 
-    private fun setEffect(builder: () -> AuthEffect) {
+    private fun setAuthEffect(builder: () -> AuthEffect) {
         val effectValue = builder()
         viewModelScope.launch {
             _authEffect.send(effectValue)
@@ -80,9 +89,15 @@ class AuthenticationViewModel @Inject constructor(
                 signInToMongoDb(authEvent.tokenId)
             }
 
-            is AuthEvent.OnLoginDialogDismissed -> {
-                setEffect {
-                    AuthEffect.OnSignInDismissed
+            is AuthEvent.OnGoogleSignInDismissed -> {
+                setAuthEffect {
+                    AuthEffect.GoogleSignInDismissed(authEvent.message)
+                }
+            }
+
+            is AuthEvent.OnGoogleSignInException -> {
+                setAuthState {
+                    copy(isLoading = false)
                 }
             }
         }
@@ -95,14 +110,17 @@ class AuthenticationViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Mongodb will use the google tokenId to exchange User information from the Google server.
+     * Then, those user information will be stored in the Mongodb.
+     */
     private fun signInToMongoDb(tokenId: String) {
         viewModelScope.launch {
             val googleUser = getUserFromTokenId(tokenId)
-            Log.d("Token", "Signing in to MongoDb...")
+
             try {
                 val mongoUser = withContext(Dispatchers.IO) {
                     App.create(MONGO_APP_ID).login(Credentials.jwt(tokenId))
-
                 }
 
                 saveUserInfo(googleUser, mongoUser)
@@ -117,9 +135,9 @@ class AuthenticationViewModel @Inject constructor(
                     }
 
                     if (authState.value.googleButtonState.isAuthenticated) {
-                        setEffect { AuthEffect.Navigation.ToHomeScreen }
+                        setAuthEffect { AuthEffect.Navigation.ToHomeScreen }
                     } else {
-                        setEffect { AuthEffect.OnSignInFailure }
+                        setAuthEffect { AuthEffect.SignInFailure }
                     }
                 }
             } catch (e: Exception) {
@@ -131,8 +149,7 @@ class AuthenticationViewModel @Inject constructor(
                             isError = true
                         )
                     }
-
-                    setEffect { AuthEffect.OnSignInFailure }
+                    setAuthEffect { AuthEffect.SignInFailure }
                 }
             }
         }
@@ -149,12 +166,19 @@ class AuthenticationViewModel @Inject constructor(
             mongoAccessId = mongoUser.accessToken
         )
     }
+
+    private fun handleGoogleSignInException() {
+        setAuthState {
+            copy(isLoading = false)
+        }
+    }
 }
 
 sealed class AuthEvent {
     data object OnSignInButtonClicked : AuthEvent()
     data class OnTokenReceived(val tokenId: String) : AuthEvent()
-    data class OnLoginDialogDismissed(val message: String) : AuthEvent()
+    data class OnGoogleSignInDismissed(val message: String) : AuthEvent()
+    data object OnGoogleSignInException : AuthEvent()
 }
 
 data class AuthState(
@@ -169,8 +193,8 @@ data class GoogleButtonState(
 )
 
 sealed class AuthEffect {
-    data object OnSignInFailure : AuthEffect()
-    data object OnSignInDismissed : AuthEffect()
+    data object SignInFailure : AuthEffect()
+    data class GoogleSignInDismissed(val message: String) : AuthEffect()
 
     sealed class Navigation : AuthEffect() {
         data object ToHomeScreen : Navigation()

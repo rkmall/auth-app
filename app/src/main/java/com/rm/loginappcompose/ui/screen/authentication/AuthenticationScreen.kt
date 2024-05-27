@@ -13,21 +13,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import com.rm.loginappcompose.data.AppConstants
-import com.rm.loginappcompose.googlesignin.GoogleSignInState
 import com.rm.loginappcompose.googlesignin.SignInWithGoogle
 import kotlinx.coroutines.flow.Flow
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun AuthenticationScreen(
-    //authenticated: Boolean,
-    //loadingState: Boolean,
-    //signInState: GoogleSignInState,
-    //onButtonClicked: () -> Unit = {},
-    //onTokenIdReceived: (String) -> Unit = {},
-    //onDialogDismissed: (String) -> Unit = {},
-    //navigateToHome: () -> Unit,
     state: AuthState,
     effect: Flow<AuthEffect>?,
     onEventSent: (AuthEvent) -> Unit,
@@ -42,16 +35,16 @@ fun AuthenticationScreen(
                     onNavigationRequested(effect)
                 }
 
-                is AuthEffect.OnSignInFailure -> {
+                is AuthEffect.SignInFailure -> {
                     snackBarHostState.showSnackbar(
                         message = "Something went wrong",
                         duration = SnackbarDuration.Short
                     )
                 }
 
-                is AuthEffect.OnSignInDismissed -> {
+                is AuthEffect.GoogleSignInDismissed -> {
                     snackBarHostState.showSnackbar(
-                        message = "SignIn Dismissed",
+                        message = effect.message,
                         duration = SnackbarDuration.Short
                     )
                 }
@@ -74,32 +67,22 @@ fun AuthenticationScreen(
     )
 
     SignInWithGoogle(
-        state = state.googleButtonState.signInState ,
+        state = state.googleButtonState.signInState,
         clientId = AppConstants.WEB_CLIENT_ID ,
         onTokenIdReceived = { onEventSent(AuthEvent.OnTokenReceived(it)) },
-        onDialogDismissed = { onEventSent(AuthEvent.OnLoginDialogDismissed(it)) }
+        onDialogDismissed = { onEventSent(AuthEvent.OnGoogleSignInDismissed(it)) },
+        onExceptionReceived = { onEventSent(AuthEvent.OnGoogleSignInException) }
     )
-
-    /*LaunchedEffect(key1 = authenticated) {
-        if(authenticated) {
-            navigateToHome()
-        }
-    }*/
 }
 
-/**
- * MongoDb will use the token to exchange User information from the Google server.
- * Then, those user information will be stored in the MongoDb.
- */
-
-/*@Preview
+@Preview
 @Composable
 fun PreviewAuthenticationScreen() {
     AuthenticationScreen(
-        authenticated = false,
-        loadingState = false ,
-        signInState = rememberGoogleSignInState(),
-        navigateToHome = {}
+        state = AuthState(),
+        effect = null,
+        onEventSent = {},
+        onNavigationRequested = {}
     )
-}*/
+}
 
