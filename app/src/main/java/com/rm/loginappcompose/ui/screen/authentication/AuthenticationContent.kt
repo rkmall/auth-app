@@ -59,7 +59,7 @@ fun AuthenticationContent(
         ) {
             SignInButton(
                 loadingState = loadingState,
-                onClick = onButtonClicked
+                onClick = { onButtonClicked() }
             )
         }
     }

@@ -6,4 +6,5 @@ plugins {
     alias(libs.plugins.devtoolsKsp) apply false
     //alias(libs.plugins.googleGms) apply false
     alias(libs.plugins.realmKotlin) apply false
+    alias(libs.plugins.kotlinxSerializationPlugin) apply false
 }

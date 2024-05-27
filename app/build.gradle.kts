@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.hiltAndroid)
     alias(libs.plugins.devtoolsKsp)
     alias(libs.plugins.realmKotlin)
+    alias(libs.plugins.kotlinxSerializationPlugin)
     //alias(libs.plugins.googleGms)
 }
 
@@ -70,6 +71,13 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     // Runtime Compose for ViewModels
     implementation(libs.androidx.lifecycle.runtime.compose)
+
+
+    // Datastore
+    implementation(libs.androidx.datastore.preferences)
+
+    // Serialization
+    implementation(libs.kotlinx.serialization.json)
 
     // Dagger Hilt
     implementation(libs.hilt.android)

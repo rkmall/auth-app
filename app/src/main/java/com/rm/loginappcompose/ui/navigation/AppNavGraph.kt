@@ -8,6 +8,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
@@ -16,6 +17,8 @@ import androidx.navigation.compose.composable
 import com.rm.loginappcompose.googlesignin.rememberGoogleSignInState
 import com.rm.loginappcompose.ui.screen.authentication.AuthenticationScreen
 import com.rm.loginappcompose.ui.screen.authentication.AuthenticationViewModel
+import com.rm.loginappcompose.ui.screen.home.HomeScreen
+import com.rm.loginappcompose.ui.screen.home.HomeViewModel
 
 @Composable
 fun AppNavGraph(
@@ -23,7 +26,12 @@ fun AppNavGraph(
     navController: NavHostController
 ) {
     NavHost(navController = navController, startDestination = startDestination ) {
-        authenticationRoute {  }
+        authenticationRoute(
+            navigateToHome = {
+                navController.navigate(Route.Home.route)
+            }
+        )
+
         homeRoute()
     }
 }
@@ -32,11 +40,23 @@ fun NavGraphBuilder.authenticationRoute(
     navigateToHome: () -> Unit
 ) {
     composable(route = Route.Authentication.route) {
-        val viewModel: AuthenticationViewModel = viewModel()
-        val loadingState by viewModel.loadingState.collectAsState()
+        val viewModel: AuthenticationViewModel = hiltViewModel()
+
+        AuthenticationScreen(
+            state = viewModel.authState.collectAsState().value,
+            effect = viewModel.authEffect,
+            onEventSent = { event -> viewModel.setAuthEvent(event) },
+            onNavigationRequested = { navigationEffect ->
+                navigateToHome()
+            }
+        )
+
+        /*val loadingState by viewModel.loadingState.collectAsState()
+        val authenticated by viewModel.authenticated
         val signInState = rememberGoogleSignInState()
 
         AuthenticationScreen(
+            authenticated = authenticated,
             loadingState = loadingState,
             signInState = signInState,
             onButtonClicked = {
@@ -50,7 +70,6 @@ fun NavGraphBuilder.authenticationRoute(
                     onSuccess = { result ->
                         Log.d("Token", "Sign-in to MongoDb success: $result")
                         viewModel.setLoadingState(false)
-
                     },
                     onError = {
                         Log.d("Token", "Sign-in to MongoDb exception: ${it.message}")
@@ -60,13 +79,22 @@ fun NavGraphBuilder.authenticationRoute(
             },
             onDialogDismissed = { message ->
                 Log.d("Token", "Message: $message")
+            },
+            navigateToHome = navigateToHome,
+            state = viewModel.authState.collectAsState().value,
+            effect = viewModel.authEffect,
+            onEventSent = { event -> viewModel.setAuthEvent(event) },
+            onNavigationRequested = { navigationEffect ->
+                navigateToHome()
             }
-        )
+        )*/
     }
 }
 
 fun NavGraphBuilder.homeRoute() {
-    composable(
-        route = Route.Home.route
-    ) {}
+    composable(route = Route.Home.route) {
+        val viewModel: HomeViewModel = hiltViewModel()
+
+        HomeScreen(viewModel)
+    }
 }

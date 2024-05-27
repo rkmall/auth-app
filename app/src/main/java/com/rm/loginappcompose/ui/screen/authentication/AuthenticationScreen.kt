@@ -1,49 +1,90 @@
 package com.rm.loginappcompose.ui.screen.authentication
 
 import android.annotation.SuppressLint
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import com.rm.loginappcompose.data.AppConstants
 import com.rm.loginappcompose.googlesignin.GoogleSignInState
 import com.rm.loginappcompose.googlesignin.SignInWithGoogle
-import com.rm.loginappcompose.googlesignin.rememberGoogleSignInState
+import kotlinx.coroutines.flow.Flow
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun AuthenticationScreen(
-    loadingState: Boolean,
-    signInState: GoogleSignInState,
-    onButtonClicked: () -> Unit = {},
-    onTokenIdReceived: (String) -> Unit = {},
-    onDialogDismissed: (String) -> Unit = {}
+    //authenticated: Boolean,
+    //loadingState: Boolean,
+    //signInState: GoogleSignInState,
+    //onButtonClicked: () -> Unit = {},
+    //onTokenIdReceived: (String) -> Unit = {},
+    //onDialogDismissed: (String) -> Unit = {},
+    //navigateToHome: () -> Unit,
+    state: AuthState,
+    effect: Flow<AuthEffect>?,
+    onEventSent: (AuthEvent) -> Unit,
+    onNavigationRequested: (AuthEffect.Navigation.ToHomeScreen) -> Unit
 ) {
+    val snackBarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(key1 = Unit) {
+        effect?.collect { effect ->
+            when (effect) {
+                is AuthEffect.Navigation.ToHomeScreen -> {
+                    onNavigationRequested(effect)
+                }
+
+                is AuthEffect.OnSignInFailure -> {
+                    snackBarHostState.showSnackbar(
+                        message = "Something went wrong",
+                        duration = SnackbarDuration.Short
+                    )
+                }
+
+                is AuthEffect.OnSignInDismissed -> {
+                    snackBarHostState.showSnackbar(
+                        message = "SignIn Dismissed",
+                        duration = SnackbarDuration.Short
+                    )
+                }
+            }
+        }
+    }
+
     Scaffold(
+        snackbarHost = { SnackbarHost(hostState = snackBarHostState) },
         modifier = Modifier
             .background(MaterialTheme.colorScheme.surface)
             .statusBarsPadding()
             .navigationBarsPadding(),
         content = {
             AuthenticationContent(
-                loadingState = loadingState,
-                onButtonClicked = onButtonClicked
+                loadingState = state.isLoading,
+                onButtonClicked = { onEventSent(AuthEvent.OnSignInButtonClicked) }
             )
         }
     )
 
     SignInWithGoogle(
-        state = signInState ,
+        state = state.googleButtonState.signInState ,
         clientId = AppConstants.WEB_CLIENT_ID ,
-        onTokenIdReceived = { token -> onTokenIdReceived(token) },
-        onDialogDismissed = { message -> onDialogDismissed(message) }
+        onTokenIdReceived = { onEventSent(AuthEvent.OnTokenReceived(it)) },
+        onDialogDismissed = { onEventSent(AuthEvent.OnLoginDialogDismissed(it)) }
     )
+
+    /*LaunchedEffect(key1 = authenticated) {
+        if(authenticated) {
+            navigateToHome()
+        }
+    }*/
 }
 
 /**
@@ -51,12 +92,14 @@ fun AuthenticationScreen(
  * Then, those user information will be stored in the MongoDb.
  */
 
-@Preview
+/*@Preview
 @Composable
 fun PreviewAuthenticationScreen() {
     AuthenticationScreen(
+        authenticated = false,
         loadingState = false ,
-        signInState = rememberGoogleSignInState()
+        signInState = rememberGoogleSignInState(),
+        navigateToHome = {}
     )
-}
+}*/
 

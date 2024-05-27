@@ -20,7 +20,10 @@ import com.rm.loginappcompose.googlesignin.rememberGoogleSignInState
 import com.rm.loginappcompose.ui.navigation.AppNavGraph
 import com.rm.loginappcompose.ui.navigation.Route
 import com.rm.loginappcompose.ui.theme.LoginAppComposeTheme
+import dagger.hilt.android.AndroidEntryPoint
+import io.realm.kotlin.mongodb.App
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -28,7 +31,7 @@ class MainActivity : ComponentActivity() {
             LoginAppComposeTheme {
                 val navController = rememberNavController()
                 AppNavGraph(
-                    startDestination = Route.Authentication.route,
+                    startDestination = getStartDestination(),
                     navController = navController
                 )
             }
@@ -36,6 +39,10 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+private fun getStartDestination(): String {
+    val user = App.create(AppConstants.MONGO_APP_ID).currentUser
+    return if (user != null && user.loggedIn) Route.Home.route else Route.Authentication.route
+}
 
 
 

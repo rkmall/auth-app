@@ -1,11 +1,14 @@
 [versions]
 agp = "8.3.2"
+datastorePreferences = "1.1.1"
 gson = "2.10.1"
 hiltAndroid = "2.51"
 hiltNavigationCompose = "1.2.0"
 jwtdecode = "2.0.2"
 kotlin = "1.9.0"
 coreKtx = "1.13.1"
+kotlinxSerializationJson = "1.6.0"
+kotlinxSerializationPlugin = "1.7.0"
 lifecycleViewmodelCompose = "2.8.0"
 junit = "4.13.2"
 junitVersion = "1.1.5"
@@ -25,6 +28,7 @@ googleGms = "4.3.15"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastorePreferences" }
 androidx-hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hiltNavigationCompose" }
 androidx-lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "lifecycleRuntimeCompose" }
 androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycleViewmodelCompose" }
@@ -47,6 +51,7 @@ androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit
 androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
 jwtdecode = { module = "com.auth0.android:jwtdecode", version.ref = "jwtdecode" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinxCoroutinesCore" }
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
 library-base = { module = "io.realm.kotlin:library-base", version.ref = "mongoDbRealm" }
 library-sync = { module = "io.realm.kotlin:library-sync", version.ref = "mongoDbRealm" }
 androidx-credentials = { module = "androidx.credentials:credentials", version.ref = "googleCredentials" }
@@ -60,5 +65,6 @@ jetbrainsKotlinAndroid = { id = "org.jetbrains.kotlin.android", version.ref = "k
 hiltAndroid = { id = "com.google.dagger.hilt.android", version.ref = "hiltAndroid" }
 devtoolsKsp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 realmKotlin = { id = "io.realm.kotlin", version.ref = "mongoDbRealm"}
+kotlinxSerializationPlugin = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlinxSerializationPlugin"}
 googleGms = { id = "com.google.gms.google-services", version.ref = "googleGms" }
 
